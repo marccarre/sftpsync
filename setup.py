@@ -10,11 +10,14 @@ config = {
     'download_url': 'https://github.com/marccarre/sftpsync',
     'author_email': 'carre.marc@gmail.com',
     'version': '0.1',
-    'install_requires': ['nose'],
+    'install_requires': comma_separated_dependencies(),
     'packages': ['sftpsync'],
     'scripts': [],
     'name': 'sftpsync'
 }
 
-setup(**config)
+def comma_separated_dependencies(exclusions=('nose', 'unittest2')):
+    with open('requirements.txt', 'r') as f:
+        return ','.join(dep.strip() for dep in f if all(not dep.startswith(e) for e in exclusions))
 
+setup(**config)
