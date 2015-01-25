@@ -1,0 +1,12 @@
+# local -> proxy-server -> destination-server
+
+Host proxy-server
+  User foo
+  HostName proxy.example.com
+  IdentityFile ./test_proxy_rsa
+
+Host destination-server
+  User bar
+  HostName real.example.com
+  IdentityFile ./test_real_rsa
+  ProxyCommand ssh proxy-server nc %h %p
