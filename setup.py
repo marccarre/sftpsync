@@ -16,8 +16,8 @@ config = {
     'name': 'sftpsync'
 }
 
-def comma_separated_dependencies(exclusions=('nose', 'unittest2')):
+def comma_separated_dependencies(exclusions=('#', 'nose', 'unittest2')):
     with open('requirements.txt', 'r') as f:
-        return ','.join(dep.strip() for dep in f if all(not dep.startswith(e) for e in exclusions))
+        return ','.join(dep.strip() for dep in f if len(dep.strip()) > 0 and all(not dep.startswith(e) for e in exclusions))
 
 setup(**config)
