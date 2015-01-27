@@ -1,4 +1,6 @@
 import os
+import sys
+import getopt
 import socks
 import socket
 import paramiko
@@ -131,10 +133,52 @@ def proxy_socket(host, port=1080, username=None, password=None, version=socks.SO
     proxy.set_proxy(proxy_type=version, addr=host, port=port, username=username, password=password)
     return proxy
 
-def _parse_socks_version(version='SOCKS5', white_list=('SOCKS4', 'SOCKS5')):
+def _parse_socks_version(version='SOCKS5', white_list=PROXY_VERSIONS):
     if version not in white_list:
         raise ValueError('Invalid SOCKS version: "%s". Please choose one of the following values: "%s".' % (version, '", "'.join(white_list)))
     return eval('socks.%s' % version)
 
+
+
+ERROR_INVALID_CMD_LINE_ARGS = 2
+PROXY_VERSIONS = ['SOCKS4', 'SOCKS5']
+OPTIONS = {
+}
+
+def usage():
+    print('sftpsync.py [-hipqrv] user:password@host:port/path /path/to/local/copy')
+    print('Options:')
+    print('-h/--help       Prints this!')
+    print('-i/--identity identity_file')
+    print('                Selects the file from which the identity (private key) for public key authentication is read.')
+    print('-p/--preserve:  Preserves modification times, access times, and modes from the original file.')
+    print('-q/--quiet:     Quiet mode: disables the progress meter as well as warning and diagnostic messages from ssh(1).')
+    print('-r/--recursive: Recursively synchronize entire directories.')
+    print('-v/--verbose:   Verbose mode. Causes sftpsync to print debugging messages about their progress. This is helpful in debugging connection, authentication, and configuration problems.')
+
+def get_args(argv):
+    try:
+        return getopt.getopt(argv, 'h', ['help'])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(ERROR_INVALID_CMD_LINE_ARGS)
+
+def configure(argv):
+    opts, args = get_args(argv)
+    for opt, arg in opts:
+        if opt in ('-h', '--help'):
+            usage()
+            sys.exit()
+        elif opt == '--':
+            pass
+
+    if not sftpsync:
+        usage()
+        sys.exit(ERROR_INVALID_CMD_LINlE_ARGS)
+    return sftpsync
+
+def main(argv):
+    pass
+
 if __name__ == '__main__':
-    pass  # TODO: parse command line arguments.
+    main(sys.argv[1:])
