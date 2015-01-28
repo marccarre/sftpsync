@@ -1,4 +1,6 @@
+#!/usr/local/bin/python
 import os
+from os import linesep
 import sys
 import getopt
 import socks
@@ -133,12 +135,6 @@ def proxy_socket(host, port=1080, username=None, password=None, version=socks.SO
     proxy.set_proxy(proxy_type=version, addr=host, port=port, username=username, password=password)
     return proxy
 
-def _parse_socks_version(version='SOCKS5', white_list=PROXY_VERSIONS):
-    if version not in white_list:
-        raise ValueError('Invalid SOCKS version: "%s". Please choose one of the following values: "%s".' % (version, '", "'.join(white_list)))
-    return eval('socks.%s' % version)
-
-
 
 ERROR_INVALID_CMD_LINE_ARGS = 2
 PROXY_VERSIONS = ['SOCKS4', 'SOCKS5']
@@ -146,25 +142,45 @@ OPTIONS = {
 }
 
 def usage():
-    print('sftpsync.py [-hipqrv] user:password@host:port/path /path/to/local/copy')
-    print('Options:')
-    print('-h/--help       Prints this!')
-    print('-i/--identity identity_file')
-    print('                Selects the file from which the identity (private key) for public key authentication is read.')
-    print('-p/--preserve:  Preserves modification times, access times, and modes from the original file.')
-    print('-q/--quiet:     Quiet mode: disables the progress meter as well as warning and diagnostic messages from ssh(1).')
-    print('-r/--recursive: Recursively synchronize entire directories.')
-    print('-v/--verbose:   Verbose mode. Causes sftpsync to print debugging messages about their progress. This is helpful in debugging connection, authentication, and configuration problems.')
+    print('Usage:' + linesep + \
+        'sftpsync.py [OPTION]... [user[:password]@]host[:[port]/path] /path/to/local/copy' + linesep + linesep + \
+        'Defaults:' + linesep + \
+        '    user:     anonymous' + linesep + \
+        '    password: anonymous' + linesep + \
+        '    port:     22' + linesep + \
+        '    path:     /' + linesep + linesep + \
+        'Options:' + linesep + \
+        '-h/--help       Prints this!' + linesep + \
+        '-i/--identity identity_file' + linesep + \
+        '                Selects the file from which the identity (private key) for public key authentication is read.' + linesep + \
+        '-o ssh_option' + linesep + \
+        '                Can be used to pass options to ssh in the format used in ssh_config(5). This is useful for specifying options for which there is no separate sftpsync command-line flag. For full details of the options listed below, and their possible values, see ssh_config(5).' + linesep + \
+        '                    ProxyCommand' + linesep + \
+        '-p/--preserve:  Preserves modification times, access times, and modes from the original file.' + linesep + \
+        '--proxy [user[:password]@]host[:port]' + linesep + \
+        '                SOCKS proxy to use. If not provided, port will be defaulted to 1080.' + linesep + \
+        '--proxy-version SOCKS4|SOCKS5' + linesep + \
+        '                Version of the SOCKS protocol to use. Default is SOCKS5.' + linesep + \
+        '-q/--quiet:     Quiet mode: disables the progress meter as well as warning and diagnostic messages from ssh(1).' + linesep + \
+        '-r/--recursive: Recursively synchronize entire directories.' + linesep + \
+        '-v/--verbose:   Verbose mode. Causes sftpsync to print debugging messages about their progress. This is helpful in debugging connection, authentication, and configuration problems.' + linesep + \
+        ''
+    )
 
-def get_args(argv):
+def _get_args(argv):
     try:
         return getopt.getopt(argv, 'h', ['help'])
     except getopt.GetoptError:
         usage()
         sys.exit(ERROR_INVALID_CMD_LINE_ARGS)
 
-def configure(argv):
-    opts, args = get_args(argv)
+def _parse_socks_version(version='SOCKS5', white_list=PROXY_VERSIONS):
+    if version not in white_list:
+        raise ValueError('Invalid SOCKS version: "%s". Please choose one of the following values: "%s".' % (version, '", "'.join(white_list)))
+    return eval('socks.%s' % version)
+
+def _configure(argv):
+    opts, args = _get_args(argv)
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             usage()
@@ -178,7 +194,7 @@ def configure(argv):
     return sftpsync
 
 def main(argv):
-    pass
+    usage()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
