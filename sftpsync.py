@@ -1,8 +1,9 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
 import os
 from os import linesep
-import sys
+from sys import argv, exit, stderr, stdout
 import getopt
+import re
 import socks
 import socket
 import paramiko
@@ -63,7 +64,7 @@ def synchronize(host, local_dir, preserve_timestamp=True):
                 os.utime(local_file, (remote_file.st_utime, remote_file.st_utime))
 
     # TODO: replace with logger:
-    print('Synchronized %s files in %s.' % (files_copied, strftime('%H:%M:%S', gmtime(time() - start_time))))
+    stdout.write('Synchronized %s files in %s.%s' % (files_copied, strftime('%H:%M:%S', gmtime(time() - start_time))), linesep)
 
 
 def diff(sftp, local_dir, compare_md5_hashes=False):
@@ -136,13 +137,16 @@ def proxy_socket(host, port=1080, username=None, password=None, version=socks.SO
     return proxy
 
 
-ERROR_INVALID_CMD_LINE_ARGS = 2
+ILLEGAL_ARGUMENTS_ERROR = 2
 PROXY_VERSIONS = ['SOCKS4', 'SOCKS5']
-OPTIONS = {
-}
 
-def usage():
-    print('Usage:' + linesep + \
+def error(message):
+    stderr.write('ERROR: ' + linesep + message + linesep + linesep)
+
+def usage(error_message=None):
+    if (error_message):
+        error(error_message)
+    stdout.write('Usage:' + linesep + \
         'sftpsync.py [OPTION]... [user[:password]@]host[:[port]/path] /path/to/local/copy' + linesep + linesep + \
         'Defaults:' + linesep + \
         '    user:     anonymous' + linesep + \
@@ -163,38 +167,74 @@ def usage():
         '                Version of the SOCKS protocol to use. Default is SOCKS5.' + linesep + \
         '-q/--quiet:     Quiet mode: disables the progress meter as well as warning and diagnostic messages from ssh(1).' + linesep + \
         '-r/--recursive: Recursively synchronize entire directories.' + linesep + \
-        '-v/--verbose:   Verbose mode. Causes sftpsync to print debugging messages about their progress. This is helpful in debugging connection, authentication, and configuration problems.' + linesep + \
-        ''
+        '-v/--verbose:   Verbose mode. Causes sftpsync to print debugging messages about their progress. This is helpful in debugging connection, authentication, and configuration problems.' + linesep + linesep
     )
 
-def _get_args(argv):
-    try:
-        return getopt.getopt(argv, 'h', ['help'])
-    except getopt.GetoptError:
-        usage()
-        sys.exit(ERROR_INVALID_CMD_LINE_ARGS)
+_USER = 'user'
+_PASS = 'pass'
+_HOST = 'host'
+_PORT = 'port'
+_PATH = 'path'
+
+_SFTP_REGEX_GROUPS = {
+    _USER: '.+?',
+    _PASS: '.+?',
+    _HOST: '[a-zA-Z0-9_\-\.]+',
+    _PORT: '[0-9]{1,5}',
+    _PATH: '/.*',
+}
+
+def _group(name, regexes=_SFTP_REGEX_GROUPS):
+    return '(?P<%s>%s)' % (name, regexes[name])
+
+def _parse_sftp_connection_string(connection_string):
+    pattern = '^%s?(:%s)?@%s(:%s)%s?$' % (_group(_USER), _group(_PASS), _group(_HOST), _group(_PORT), _group(_PATH))
+    match = re.search(pattern, connection_string)
+    if match:
+        return dict((group, match.group(group)) for group in _SFTP_REGEX_GROUPS.iterkeys())
+    return None
 
 def _parse_socks_version(version='SOCKS5', white_list=PROXY_VERSIONS):
     if version not in white_list:
         raise ValueError('Invalid SOCKS version: "%s". Please choose one of the following values: "%s".' % (version, '", "'.join(white_list)))
     return eval('socks.%s' % version)
 
+def _is_valid_path(path):
+    if os.path.exists(path):
+        return True
+    elif os.access(os.path.dirname(path), os.W_OK):
+        return True
+    else:
+        return False
+
 def _configure(argv):
-    opts, args = _get_args(argv)
-    for opt, arg in opts:
-        if opt in ('-h', '--help'):
-            usage()
-            sys.exit()
-        elif opt == '--':
+    try:
+        opts, args = getopt.getopt(argv, 'hi:o:pqrv', ['help', 'identity=', 'preserve', 'proxy=', 'proxy-version=', 'quiet', 'recursive', 'verbose'])
+        for opt, arg in opts:
+            if opt in ('-h', '--help'):
+                usage()
+                exit()
+
+        if len(args) != 2:
+            usage('Please provide a SFTP source and a local destination.')
+            exit(ILLEGAL_ARGUMENTS_ERROR)
+        
+        (connection_string, local_path) = args
+        connection_details = _parse_sftp_connection_string(connection_string)
+        print(connection_details)
+        if connection_details:
             pass
 
-    if not sftpsync:
-        usage()
-        sys.exit(ERROR_INVALID_CMD_LINlE_ARGS)
-    return sftpsync
+        # if not sftpsync:
+        #     usage()
+        #     exit(ILLEGAL_ARGUMENTS_ERROR)
+        # return sftpsync
+    except getopt.GetoptError as e:
+        usage(str(e))
+        exit(ILLEGAL_ARGUMENTS_ERROR)
 
 def main(argv):
-    usage()
+    sftpsync = _configure(argv)
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main(argv[1:])
