@@ -2,7 +2,8 @@
 import os
 from os import linesep
 from sys import argv, exit, stderr, stdout
-import getopt
+from getopt import getopt, GetoptError
+from getpass import getuser
 import re
 import socks
 import socket
@@ -138,7 +139,6 @@ def proxy_socket(host, port=1080, username=None, password=None, version=socks.SO
 
 
 ILLEGAL_ARGUMENTS_ERROR = 2
-PROXY_VERSIONS = ['SOCKS4', 'SOCKS5']
 
 def error(message):
     stderr.write('ERROR: ' + linesep + message + linesep + linesep)
@@ -188,49 +188,96 @@ _SFTP_REGEX_GROUPS = {
 def _group(name, regexes=_SFTP_REGEX_GROUPS):
     return '(?P<%s>%s)' % (name, regexes[name])
 
-def _parse_sftp_connection_string(connection_string):
+def _parse_connection_string(connection_string):
     pattern = '^%s?(:%s)?@%s(:%s)%s?$' % (_group(_USER), _group(_PASS), _group(_HOST), _group(_PORT), _group(_PATH))
     match = re.search(pattern, connection_string)
     if match:
         return dict((group, match.group(group)) for group in _SFTP_REGEX_GROUPS.iterkeys())
     return None
 
-def _parse_socks_version(version='SOCKS5', white_list=PROXY_VERSIONS):
-    if version not in white_list:
-        raise ValueError('Invalid SOCKS version: "%s". Please choose one of the following values: "%s".' % (version, '", "'.join(white_list)))
-    return eval('socks.%s' % version)
+def _validate_identity(path):
+    if not os.path.exists(path):
+        raise ValueError('Invalid path. "%s" does NOT exist. Please provide a valid path to identity file.' % path)
+    return path
 
-def _is_valid_path(path):
-    if os.path.exists(path):
-        return True
-    elif os.access(os.path.dirname(path), os.W_OK):
-        return True
-    else:
-        return False
+def _validate_socks_version(socks_version):
+    if socks_version not in ['SOCKS4', 'SOCKS5']:
+        raise ValueError('Invalid SOCKS version: "%s". Please choose one of the following values: "%s".' % (socks_version, '", "'.join(white_list)))
+    return eval('socks.%s' % socks_version)
+
+def _validate_path(path):
+    if not os.path.exists(path):
+        raise ValueError('Invalid path. "%s" does NOT exist.' % path)
+    if not os.access(os.path.dirname(os.path.abspath(path)), os.W_OK):
+        raise ValueError('Invalid path. "%s" exist but user "%s" does NOT have write access.' % (path, getuser()))
+    return path
+
+def _validate_connection_details(connection_string):
+    connection_details = _parse_connection_string(connection_string)
+    if not connection_details:
+        raise ValueError('Please provide a valid SFTP source. Expected a source of the form [user[:password]@]host[:[port]/path], but got: "%s".' % connection_string)
+    return connection_details
 
 def _configure(argv):
     try:
-        opts, args = getopt.getopt(argv, 'fhi:o:pqrv', ['force', 'help', 'identity=', 'preserve', 'proxy=', 'proxy-version=', 'quiet', 'recursive', 'verbose'])
-        for opt, arg in opts:
+        opts, args = getopt(argv, 'fhi:o:pqrv', ['force', 'help', 'identity=', 'preserve', 'proxy=', 'proxy-version=', 'quiet', 'recursive', 'verbose'])
+
+        # Default options:
+        force     = False
+        preserve  = False
+        quiet     = False
+        recursive = False
+        verbose   = False
+        ssh_options   = []
+        identity      = None
+        proxy_version = socks.SOCKS5
+        proxy         = None
+
+        for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
                 exit()
+            if opt in ('-f', '--force'):
+                force     = True
+            if opt in ('-p', '--preserve'):
+                preserve  = True
+            if opt in ('-q', '--quiet'):
+                quiet     = True
+            if opt in ('-r', '--recursive'):
+                recursive = True
+            if opt in ('-v', '--verbose'):
+                verbose   = True
+            if opt == '-o':
+                ssh_options.append(value)
+            if opt in ('-i', '--identity'):
+                identity = _validate_identity(value)
+            if opt == '--proxy':
+                proxy = _parse_connection_string(value)
+            if opt == '--proxy-version':
+                proxy_version = _validate_socks_version(value)
 
-        if len(args) != 2:
-            usage('Please provide a SFTP source and a local destination.')
-            exit(ILLEGAL_ARGUMENTS_ERROR)
+        if verbose and quiet:
+            raise ValueError('Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.')
+
+        if len(args) < 2:
+            raise ValueError('Please provide a SFTP source AND a local destination. Expected 2 arguments but got %s.' % len(args))
+        if len(args) > 2:
+            raise ValueError('Please provide JUST a SFTP source AND a local destination. Expected 2 arguments but got %s.' % len(args))
         
         (connection_string, local_path) = args
-        connection_details = _parse_sftp_connection_string(connection_string)
+        connection_details = _validate_connection_details(connection_string)
+        local_path = _validate_path(local_path)
+
         print(connection_details)
-        if connection_details:
-            pass
 
         # if not sftpsync:
         #     usage()
         #     exit(ILLEGAL_ARGUMENTS_ERROR)
         # return sftpsync
-    except getopt.GetoptError as e:
+    except GetoptError as e:
+        usage(str(e))
+        exit(ILLEGAL_ARGUMENTS_ERROR)
+    except ValueError as e:
         usage(str(e))
         exit(ILLEGAL_ARGUMENTS_ERROR)
 
