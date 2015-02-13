@@ -154,6 +154,7 @@ def usage(error_message=None):
         '    port:     22' + linesep + \
         '    path:     /' + linesep + linesep + \
         'Options:' + linesep + \
+        '-f/--force      Force the synchronization regardless of files\' presence or timestamps.' + linesep + \
         '-h/--help       Prints this!' + linesep + \
         '-i/--identity identity_file' + linesep + \
         '                Selects the file from which the identity (private key) for public key authentication is read.' + linesep + \
@@ -209,7 +210,7 @@ def _is_valid_path(path):
 
 def _configure(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hi:o:pqrv', ['help', 'identity=', 'preserve', 'proxy=', 'proxy-version=', 'quiet', 'recursive', 'verbose'])
+        opts, args = getopt.getopt(argv, 'fhi:o:pqrv', ['force', 'help', 'identity=', 'preserve', 'proxy=', 'proxy-version=', 'quiet', 'recursive', 'verbose'])
         for opt, arg in opts:
             if opt in ('-h', '--help'):
                 usage()
