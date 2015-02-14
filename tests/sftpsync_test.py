@@ -2,7 +2,7 @@ import os
 from socks import SOCKS4, SOCKS5
 from tempfile import mktemp
 from unittest2 import TestCase, main
-from sftpsync import ssh_config, _parse_socks_version
+from sftpsync import ssh_config, _validate_and_parse_socks_version
 
 class SftpSyncTest(TestCase):
     def setUp(self):
@@ -11,17 +11,17 @@ class SftpSyncTest(TestCase):
     def tearDown(self):
         pass
 
-    def test___parse_socks_version__SOCKS4(self):
-        self.assertEquals(SOCKS4, _parse_socks_version('SOCKS4'))
+    def test___validate_and_parse_socks_version__SOCKS4(self):
+        self.assertEquals(SOCKS4, _validate_and_parse_socks_version('SOCKS4'))
 
-    def test___parse_socks_version__SOCKS5(self):
-        self.assertEquals(SOCKS5, _parse_socks_version('SOCKS5'))
+    def test___validate_and_parse_socks_version__SOCKS5(self):
+        self.assertEquals(SOCKS5, _validate_and_parse_socks_version('SOCKS5'))
 
-    def test___parse_socks_version__invalid_sock_version(self):
+    def test___validate_and_parse_socks_version__invalid_sock_version(self):
         self.assertRaisesRegexp(
             ValueError, 
             'Invalid SOCKS version: "invalid-version". Please choose one of the following values: "SOCKS4", "SOCKS5".', 
-            _parse_socks_version, 
+            _validate_and_parse_socks_version, 
             'invalid-version'
         )
 
