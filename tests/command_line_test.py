@@ -1,7 +1,6 @@
 from unittest2 import TestCase, main
 from test_utilities import FakeStdOut, FakeStdErr
-from command_line import usage
-
+from sftpsync.command_line import usage
 
 class CommandLineTest(TestCase):
 
