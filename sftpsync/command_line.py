@@ -3,9 +3,9 @@ import sys
 
 def usage(error_message=None):
     if error_message:
-        sys.stderr.write('ERROR: ' + error_message + linesep)
+        sys.stderr.write(_join_and_encode(['ERROR: ', error_message, linesep]))
 
-    sys.stdout.write(linesep.join([
+    sys.stdout.write(_join_and_encode([
         'Usage:',
         '    sftpsync.py [OPTION]... SOURCE DESTINATION',
         'Pull:',
@@ -36,4 +36,7 @@ def usage(error_message=None):
         '-r/--recursive: Recursively synchronize entire directories.',
         '-v/--verbose:   Verbose mode. Causes sftpsync to print debugging messages about their progress. This is helpful in debugging connection, authentication, and configuration problems.',
         linesep
-    ]))
+    ], separator=linesep))
+
+def _join_and_encode(strings=[], separator='', encoding='utf-8'):
+    return separator.join(strings).encode(encoding)
