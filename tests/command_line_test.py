@@ -18,4 +18,3 @@ class CommandLineTest(TestCase):
 
 if __name__ == '__main__':
     main()
-
