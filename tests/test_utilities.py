@@ -1,5 +1,5 @@
 import sys
-from cStringIO import StringIO
+from io import StringIO
 
 class FakeStdOut(object):
     def __enter__(self):

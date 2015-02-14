@@ -3,10 +3,10 @@ import sys
 
 def usage(error_message=None):
     if error_message:
-        sys.stderr.write('ERROR: ' + error_message + linesep)
+        sys.stderr.write(u'ERROR: ' + error_message + linesep)
 
     sys.stdout.write(
-        'Usage:' + linesep + \
+        u'Usage:' + linesep + \
         '    sftpsync.py [OPTION]... SOURCE DESTINATION' + linesep + \
         'Pull:' + linesep + \
         '    sftpsync.py [OPTION]... [user[:password]@]host[:[port]/path] /path/to/local/copy' + linesep + \
