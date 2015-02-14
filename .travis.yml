@@ -6,8 +6,8 @@ python:
   - 3.3
   - 3.4
 install: 
-  pip install -r requirements.txt
-  pip install coveralls
+  - pip install -r requirements.txt
+  - pip install coveralls
 script: 
   nosetests
 after_success: 
