@@ -48,22 +48,18 @@ class CommandLineTest(TestCase):
 
     def test_configure_force_short_option(self):
         config = configure(['-f'])
-        self.assertIn('force', config.keys())
         self.assertEqual(config['force'], True)
 
     def test_configure_force_long_option(self):
         config = configure(['--force'])
-        self.assertIn('force', config.keys())
         self.assertEqual(config['force'], True)
 
     def test_configure_preserve_short_option(self):
         config = configure(['-p'])
-        self.assertIn('preserve', config.keys())
         self.assertEqual(config['preserve'], True)
 
     def test_configure_preserve_long_option(self):
         config = configure(['--preserve'])
-        self.assertIn('preserve', config.keys())
         self.assertEqual(config['preserve'], True)
 
 if __name__ == '__main__':
