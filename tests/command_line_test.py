@@ -45,6 +45,7 @@ class CommandLineTest(TestCase):
             config = configure([])
             self.assertEqual(config['force'],    False)
             self.assertEqual(config['preserve'], False)
+            self.assertEqual(config['quiet'],    False)
 
     def test_configure_force_short_option(self):
         config = configure(['-f'])
@@ -61,6 +62,14 @@ class CommandLineTest(TestCase):
     def test_configure_preserve_long_option(self):
         config = configure(['--preserve'])
         self.assertEqual(config['preserve'], True)
+
+    def test_configure_quiet_short_option(self):
+        config = configure(['-q'])
+        self.assertEqual(config['quiet'], True)
+
+    def test_configure_quiet_long_option(self):
+        config = configure(['--quiet'])
+        self.assertEqual(config['quiet'], True)
 
 if __name__ == '__main__':
     main()

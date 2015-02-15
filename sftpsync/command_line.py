@@ -49,10 +49,11 @@ def configure(argv):
         # Default configuration:
         config = {
             'force':    False,
-            'preserve': False
+            'preserve': False,
+            'quiet':    False,
         }
 
-        opts, args = getopt(argv, 'fhp', ['force', 'help', 'preserve'])
+        opts, args = getopt(argv, 'fhpq', ['force', 'help', 'preserve', 'quiet'])
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
@@ -61,6 +62,8 @@ def configure(argv):
                 config['force']    = True
             if opt in ('-p', '--preserve'):
                 config['preserve'] = True
+            if opt in ('-q', '--quiet'):
+                config['quiet'] = True
 
         return config
     except GetoptError as e:
