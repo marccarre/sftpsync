@@ -48,22 +48,25 @@ def configure(argv):
     try:
         # Default configuration:
         config = {
-            'force':    False,
-            'preserve': False,
-            'quiet':    False,
+            'force':     False,
+            'preserve':  False,
+            'quiet':     False,
+            'recursive': False,
         }
 
-        opts, args = getopt(argv, 'fhpq', ['force', 'help', 'preserve', 'quiet'])
+        opts, args = getopt(argv, 'fhpqr', ['force', 'help', 'preserve', 'quiet', 'recursive'])
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
                 exit()
             if opt in ('-f', '--force'):
-                config['force']    = True
+                config['force']     = True
             if opt in ('-p', '--preserve'):
-                config['preserve'] = True
+                config['preserve']  = True
             if opt in ('-q', '--quiet'):
-                config['quiet'] = True
+                config['quiet']     = True
+            if opt in ('-r', '--recursive'):
+                config['recursive'] = True
 
         return config
     except GetoptError as e:

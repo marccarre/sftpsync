@@ -43,9 +43,10 @@ class CommandLineTest(TestCase):
 
     def test_configure_defaults(self):
             config = configure([])
-            self.assertEqual(config['force'],    False)
-            self.assertEqual(config['preserve'], False)
-            self.assertEqual(config['quiet'],    False)
+            self.assertEqual(config['force'],     False)
+            self.assertEqual(config['preserve'],  False)
+            self.assertEqual(config['quiet'],     False)
+            self.assertEqual(config['recursive'], False)
 
     def test_configure_force_short_option(self):
         config = configure(['-f'])
@@ -70,6 +71,14 @@ class CommandLineTest(TestCase):
     def test_configure_quiet_long_option(self):
         config = configure(['--quiet'])
         self.assertEqual(config['quiet'], True)
+
+    def test_configure_recursive_short_option(self):
+        config = configure(['-r'])
+        self.assertEqual(config['recursive'], True)
+
+    def test_configure_recursive_long_option(self):
+        config = configure(['--recursive'])
+        self.assertEqual(config['recursive'], True)
 
 if __name__ == '__main__':
     main()
