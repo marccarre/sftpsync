@@ -49,7 +49,7 @@ class CommandLineTest(TestCase):
             self.assertEqual(config['quiet'],     False)
             self.assertEqual(config['recursive'], False)
             self.assertEqual(config['verbose'],   False)
-            self.assertIsNone(config['private-key'])
+            self.assertIsNone(config['private_key'])
 
     def test_configure_force_short_option(self):
         config = configure(['-f'])
@@ -100,13 +100,13 @@ class CommandLineTest(TestCase):
 
     def test_configure_identity_short_option(self):
         config = configure(['-i', path_for('test_sftp_server_rsa')])
-        self.assertIsNotNone(config['private-key'])
-        self.assertIn('test_sftp_server_rsa', config['private-key'])
+        self.assertIsNotNone(config['private_key'])
+        self.assertIn('test_sftp_server_rsa', config['private_key'])
 
     def test_configure_identity_long_option(self):
         config = configure(['--identity', path_for('test_sftp_server_rsa')])
-        self.assertIsNotNone(config['private-key'])
-        self.assertIn('test_sftp_server_rsa', config['private-key'])
+        self.assertIsNotNone(config['private_key'])
+        self.assertIn('test_sftp_server_rsa', config['private_key'])
 
 def path_for(filename):
     return os.path.join(current_dir(), filename)

@@ -54,7 +54,7 @@ def configure(argv):
             'quiet':     False,
             'recursive': False,
             'verbose':   False,
-            'private-key':  None,
+            'private_key': None,
         }
 
         opts, args = getopt(argv, 'fhi:pqrv', ['force', 'help', 'identity=', 'preserve', 'quiet', 'recursive', 'verbose'])
@@ -73,7 +73,7 @@ def configure(argv):
             if opt in ('-v', '--verbose'):
                 config['verbose']   = True
             if opt in ('-i', '--identity'):
-                config['private-key'] = _validate_private_key_path(value)
+                config['private_key'] = _validate_private_key_path(value)
 
         if config['verbose'] and config['quiet']:
             raise ValueError('Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.')
