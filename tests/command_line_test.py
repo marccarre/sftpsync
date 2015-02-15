@@ -47,6 +47,7 @@ class CommandLineTest(TestCase):
             self.assertEqual(config['preserve'],  False)
             self.assertEqual(config['quiet'],     False)
             self.assertEqual(config['recursive'], False)
+            self.assertEqual(config['verbose'],   False)
 
     def test_configure_force_short_option(self):
         config = configure(['-f'])
@@ -79,6 +80,21 @@ class CommandLineTest(TestCase):
     def test_configure_recursive_long_option(self):
         config = configure(['--recursive'])
         self.assertEqual(config['recursive'], True)
+
+    def test_configure_verbose_short_option(self):
+        config = configure(['-v'])
+        self.assertEqual(config['verbose'], True)
+
+    def test_configure_verbose_long_option(self):
+        config = configure(['--verbose'])
+        self.assertEqual(config['verbose'], True)
+
+    def test_configure_verbose_and_quiet_at_the_same_time(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['--quiet', '--verbose'])
+                self.assertIn('ERROR: Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
 if __name__ == '__main__':
     main()

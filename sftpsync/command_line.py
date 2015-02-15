@@ -52,9 +52,10 @@ def configure(argv):
             'preserve':  False,
             'quiet':     False,
             'recursive': False,
+            'verbose':   False,
         }
 
-        opts, args = getopt(argv, 'fhpqr', ['force', 'help', 'preserve', 'quiet', 'recursive'])
+        opts, args = getopt(argv, 'fhpqrv', ['force', 'help', 'preserve', 'quiet', 'recursive', 'verbose'])
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
@@ -67,8 +68,16 @@ def configure(argv):
                 config['quiet']     = True
             if opt in ('-r', '--recursive'):
                 config['recursive'] = True
+            if opt in ('-v', '--verbose'):
+                config['verbose']   = True
+
+        if config['verbose'] and config['quiet']:
+            raise ValueError('Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.')
 
         return config
     except GetoptError as e:
+        usage(str(e))
+        exit(ERROR_ILLEGAL_ARGUMENTS)
+    except ValueError as e:
         usage(str(e))
         exit(ERROR_ILLEGAL_ARGUMENTS)
