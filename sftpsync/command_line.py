@@ -46,14 +46,20 @@ def usage(error_message=None):
 
 def configure(argv):
     try:
-        opts, args = getopt(argv, 'h', ['help'])
+        # Default configuration:
+        config = {
+            'force': False
+        }
+
+        opts, args = getopt(argv, 'fh', ['force', 'help'])
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
                 exit()
+            if opt in ('-f', '--force'):
+                config['force'] = True
+
+        return config
     except GetoptError as e:
-        usage(str(e))
-        exit(ERROR_ILLEGAL_ARGUMENTS)
-    except ValueError as e:
         usage(str(e))
         exit(ERROR_ILLEGAL_ARGUMENTS)

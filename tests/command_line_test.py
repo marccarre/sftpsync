@@ -34,12 +34,27 @@ class CommandLineTest(TestCase):
     def test_configure_help_short_option(self):
         with FakeStdOut() as out:
             self.assertRaisesRegex(SystemExit, '', configure, ['-h'])
-            self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())        
+            self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
     def test_configure_help_long_option(self):
         with FakeStdOut() as out:
             self.assertRaisesRegex(SystemExit, '', configure, ['--help'])
-            self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())        
+            self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_force_is_set_to_false_by_default(self):
+            config = configure([])
+            self.assertIn('force', config.keys())
+            self.assertEqual(config['force'], False)
+
+    def test_configure_force_short_option(self):
+        config = configure(['-f'])
+        self.assertIn('force', config.keys())
+        self.assertEqual(config['force'], True)
+
+    def test_configure_force_long_option(self):
+        config = configure(['--force'])
+        self.assertIn('force', config.keys())
+        self.assertEqual(config['force'], True)
 
 if __name__ == '__main__':
     main()
