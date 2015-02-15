@@ -5,7 +5,6 @@ from getopt import getopt, GetoptError
 
 
 ERROR_ILLEGAL_ARGUMENTS = 2
-OK = 0
 
 def usage(error_message=None):
     if error_message:
@@ -51,7 +50,7 @@ def configure(argv):
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
-                exit(OK)
+                exit()
     except GetoptError as e:
         usage(str(e))
         exit(ERROR_ILLEGAL_ARGUMENTS)

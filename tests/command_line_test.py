@@ -38,14 +38,14 @@ class CommandLineTest(TestCase):
         with FakeStdOut() as out:
             with self.assertRaises(SystemExit) as e:
                 configure(['-h'])
-            self.assertEqual(e.exception.code, 0)
+            self.assertEqual(e.exception.code, None)
             self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())        
 
     def test_configure_help_long_option(self):
         with FakeStdOut() as out:
             with self.assertRaises(SystemExit) as e:
                 configure(['--help'])
-            self.assertEqual(e.exception.code, 0)
+            self.assertEqual(e.exception.code, None)
             self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())        
 
 if __name__ == '__main__':
