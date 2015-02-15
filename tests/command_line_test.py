@@ -1,5 +1,6 @@
 from unittest2 import TestCase, main
 from tests.test_utilities import FakeStdOut, FakeStdErr
+from six import assertRaisesRegex
 from sftpsync.command_line import usage, configure
 
 class CommandLineTest(TestCase):
@@ -19,41 +20,25 @@ class CommandLineTest(TestCase):
     def test_configure_with_non_existing_short_option(self):
         with FakeStdOut() as out:
             with FakeStdErr() as err:
-                with self.assertRaises(SystemExit) as context_manager:
-                    configure(['-z'])
-                e = context_manager.exception
-
-                self.assertEqual(e.code, 2)
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-z'])
                 self.assertIn('ERROR: option -z not recognized', err.getvalue())
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
     def test_configure_with_non_existing_long_option(self):
         with FakeStdOut() as out:
             with FakeStdErr() as err:
-                with self.assertRaises(SystemExit) as context_manager:
-                    configure(['--non-existing'])
-                e = context_manager.exception
-
-                self.assertEqual(e.code, 2)
+                self.assertRaisesRegex(SystemExit, '2', configure, ['--non-existing'])
                 self.assertIn('ERROR: option --non-existing not recognized', err.getvalue())
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
     def test_configure_help_short_option(self):
         with FakeStdOut() as out:
-            with self.assertRaises(SystemExit) as context_manager:
-                configure(['-h'])
-            e = context_manager.exception
-
-            self.assertEqual(e.code, None)
+            self.assertRaisesRegex(SystemExit, '', configure, ['-h'])
             self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())        
 
     def test_configure_help_long_option(self):
         with FakeStdOut() as out:
-            with self.assertRaises(SystemExit) as context_manager:
-                configure(['--help'])
-            e = context_manager.exception
-
-            self.assertEqual(e.code, None)
+            self.assertRaisesRegex(SystemExit, '', configure, ['--help'])
             self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())        
 
 if __name__ == '__main__':
