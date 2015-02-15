@@ -108,6 +108,29 @@ class CommandLineTest(TestCase):
         self.assertIsNotNone(config['private_key'])
         self.assertIn('test_sftp_server_rsa', config['private_key'])
 
+    def test_configure_missing_identity(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['--identity'])
+                self.assertIn('ERROR: option --identity requires argument', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_empty_identity(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['--identity', ''])
+                self.assertIn('ERROR: Invalid path: "". Please provide a valid path to your private key.', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_non_existing_identity(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['--identity', path_for('non_existing_private_key')])
+                error_message = err.getvalue()
+                self.assertIn('ERROR: Invalid path: "', error_message)
+                self.assertIn('non_existing_private_key". Provided path does NOT exist. Please provide a valid path to your private key.', error_message)
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
 def path_for(filename):
     return os.path.join(current_dir(), filename)
 
