@@ -90,5 +90,5 @@ def _validate_private_key_path(path):
     if not path:
         raise ValueError('Invalid path: "%s". Please provide a valid path to your private key.' % path)
     if not os.path.exists(path):
-        raise ValueError('Invalid path. "%s" does NOT exist. Please provide a valid path to your private key.' % path)
+        raise ValueError('Invalid path: "%s". Provided path does NOT exist. Please provide a valid path to your private key.' % path)
     return path
