@@ -1,5 +1,6 @@
 import sys
 from sys import argv, exit
+import os
 from os import linesep
 from getopt import getopt, GetoptError
 
@@ -53,9 +54,10 @@ def configure(argv):
             'quiet':     False,
             'recursive': False,
             'verbose':   False,
+            'private-key':  None,
         }
 
-        opts, args = getopt(argv, 'fhpqrv', ['force', 'help', 'preserve', 'quiet', 'recursive', 'verbose'])
+        opts, args = getopt(argv, 'fhi:pqrv', ['force', 'help', 'identity=', 'preserve', 'quiet', 'recursive', 'verbose'])
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
@@ -70,6 +72,8 @@ def configure(argv):
                 config['recursive'] = True
             if opt in ('-v', '--verbose'):
                 config['verbose']   = True
+            if opt in ('-i', '--identity'):
+                config['private-key'] = _validate_private_key_path(value)
 
         if config['verbose'] and config['quiet']:
             raise ValueError('Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.')
@@ -81,3 +85,10 @@ def configure(argv):
     except ValueError as e:
         usage(str(e))
         exit(ERROR_ILLEGAL_ARGUMENTS)
+
+def _validate_private_key_path(path):
+    if not path:
+        raise ValueError('Invalid path: "%s". Please provide a valid path to your private key.' % path)
+    if not os.path.exists(path):
+        raise ValueError('Invalid path. "%s" does NOT exist. Please provide a valid path to your private key.' % path)
+    return path

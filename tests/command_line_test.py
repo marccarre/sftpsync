@@ -1,6 +1,7 @@
 from unittest2 import TestCase, main
 from tests.test_utilities import FakeStdOut, FakeStdErr
 from six import assertRaisesRegex
+import os
 from sftpsync.command_line import usage, configure
 
 class CommandLineTest(TestCase):
@@ -48,6 +49,7 @@ class CommandLineTest(TestCase):
             self.assertEqual(config['quiet'],     False)
             self.assertEqual(config['recursive'], False)
             self.assertEqual(config['verbose'],   False)
+            self.assertIsNone(config['private-key'])
 
     def test_configure_force_short_option(self):
         config = configure(['-f'])
@@ -95,6 +97,22 @@ class CommandLineTest(TestCase):
                 self.assertRaisesRegex(SystemExit, '2', configure, ['--quiet', '--verbose'])
                 self.assertIn('ERROR: Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.', err.getvalue())
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_identity_short_option(self):
+        config = configure(['-i', path_for('test_sftp_server_rsa')])
+        self.assertIsNotNone(config['private-key'])
+        self.assertIn('test_sftp_server_rsa', config['private-key'])
+
+    def test_configure_identity_long_option(self):
+        config = configure(['--identity', path_for('test_sftp_server_rsa')])
+        self.assertIsNotNone(config['private-key'])
+        self.assertIn('test_sftp_server_rsa', config['private-key'])
+
+def path_for(filename):
+    return os.path.join(current_dir(), filename)
+
+def current_dir():
+    return os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
 if __name__ == '__main__':
     main()
