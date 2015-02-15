@@ -18,13 +18,13 @@ def usage(error_message=None):
         '    sftpsync.py [OPTION]... [user[:password]@]host[:[port]/path] /path/to/local/copy',
         'Push:',
         '    sftpsync.py [OPTION]... /path/to/local/copy [user[:password]@]host[:[port]/path]',
-        linesep,
+        '',
         'Defaults:',
         '    user:     anonymous',
         '    password: anonymous',
         '    port:     22',
         '    path:     /',
-        linesep,
+        '',
         'Options:',
         '-f/--force      Force the synchronization regardless of files\' presence or timestamps.',
         '-h/--help       Prints this!',
@@ -42,7 +42,7 @@ def usage(error_message=None):
         '-q/--quiet:     Quiet mode: disables the progress meter as well as warning and diagnostic messages from ssh(1).',
         '-r/--recursive: Recursively synchronize entire directories.',
         '-v/--verbose:   Verbose mode. Causes sftpsync to print debugging messages about their progress. This is helpful in debugging connection, authentication, and configuration problems.',
-        linesep
+        ''
     ]))
 
 def configure(argv):
