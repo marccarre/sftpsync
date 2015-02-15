@@ -19,33 +19,41 @@ class CommandLineTest(TestCase):
     def test_configure_with_non_existing_short_option(self):
         with FakeStdOut() as out:
             with FakeStdErr() as err:
-                with self.assertRaises(SystemExit) as e:
+                with self.assertRaises(SystemExit) as context_manager:
                     configure(['-z'])
-                self.assertEqual(e.exception.code, 2)
+                e = context_manager.exception
+
+                self.assertEqual(e.code, 2)
                 self.assertIn('ERROR: option -z not recognized', err.getvalue())
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
     def test_configure_with_non_existing_long_option(self):
         with FakeStdOut() as out:
             with FakeStdErr() as err:
-                with self.assertRaises(SystemExit) as e:
+                with self.assertRaises(SystemExit) as context_manager:
                     configure(['--non-existing'])
-                self.assertEqual(e.exception.code, 2)
+                e = context_manager.exception
+
+                self.assertEqual(e.code, 2)
                 self.assertIn('ERROR: option --non-existing not recognized', err.getvalue())
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
     def test_configure_help_short_option(self):
         with FakeStdOut() as out:
-            with self.assertRaises(SystemExit) as e:
+            with self.assertRaises(SystemExit) as context_manager:
                 configure(['-h'])
-            self.assertEqual(e.exception.code, None)
+            e = context_manager.exception
+
+            self.assertEqual(e.code, None)
             self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())        
 
     def test_configure_help_long_option(self):
         with FakeStdOut() as out:
-            with self.assertRaises(SystemExit) as e:
+            with self.assertRaises(SystemExit) as context_manager:
                 configure(['--help'])
-            self.assertEqual(e.exception.code, None)
+            e = context_manager.exception
+
+            self.assertEqual(e.code, None)
             self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())        
 
 if __name__ == '__main__':
