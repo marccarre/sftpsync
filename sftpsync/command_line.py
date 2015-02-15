@@ -48,16 +48,19 @@ def configure(argv):
     try:
         # Default configuration:
         config = {
-            'force': False
+            'force':    False,
+            'preserve': False
         }
 
-        opts, args = getopt(argv, 'fh', ['force', 'help'])
+        opts, args = getopt(argv, 'fhp', ['force', 'help', 'preserve'])
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
                 exit()
             if opt in ('-f', '--force'):
-                config['force'] = True
+                config['force']    = True
+            if opt in ('-p', '--preserve'):
+                config['preserve'] = True
 
         return config
     except GetoptError as e:

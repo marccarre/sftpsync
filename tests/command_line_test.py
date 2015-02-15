@@ -41,10 +41,10 @@ class CommandLineTest(TestCase):
             self.assertRaisesRegex(SystemExit, '', configure, ['--help'])
             self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
-    def test_configure_force_is_set_to_false_by_default(self):
+    def test_configure_defaults(self):
             config = configure([])
-            self.assertIn('force', config.keys())
-            self.assertEqual(config['force'], False)
+            self.assertEqual(config['force'],    False)
+            self.assertEqual(config['preserve'], False)
 
     def test_configure_force_short_option(self):
         config = configure(['-f'])
@@ -55,6 +55,16 @@ class CommandLineTest(TestCase):
         config = configure(['--force'])
         self.assertIn('force', config.keys())
         self.assertEqual(config['force'], True)
+
+    def test_configure_preserve_short_option(self):
+        config = configure(['-p'])
+        self.assertIn('preserve', config.keys())
+        self.assertEqual(config['preserve'], True)
+
+    def test_configure_preserve_long_option(self):
+        config = configure(['--preserve'])
+        self.assertIn('preserve', config.keys())
+        self.assertEqual(config['preserve'], True)
 
 if __name__ == '__main__':
     main()
