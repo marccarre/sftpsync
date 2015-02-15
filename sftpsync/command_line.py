@@ -1,5 +1,11 @@
-from os import linesep
 import sys
+from sys import argv, exit
+from os import linesep
+from getopt import getopt, GetoptError
+
+
+ERROR_ILLEGAL_ARGUMENTS = 2
+OK = 0
 
 def usage(error_message=None):
     if error_message:
@@ -38,3 +44,17 @@ def usage(error_message=None):
         '-v/--verbose:   Verbose mode. Causes sftpsync to print debugging messages about their progress. This is helpful in debugging connection, authentication, and configuration problems.',
         linesep
     ]))
+
+def configure(argv):
+    try:
+        opts, args = getopt(argv, 'h', ['help'])
+        for opt, value in opts:
+            if opt in ('-h', '--help'):
+                usage()
+                exit(OK)
+    except GetoptError as e:
+        usage(str(e))
+        exit(ERROR_ILLEGAL_ARGUMENTS)
+    except ValueError as e:
+        usage(str(e))
+        exit(ERROR_ILLEGAL_ARGUMENTS)
