@@ -156,6 +156,34 @@ class CommandLineTest(TestCase):
                 self.assertIn('ERROR: Invalid SSH option: "".', err.getvalue())
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
+    def test_configure_ssh_option_with_empty_key_using_equal_sign(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-o', '=nc -X 5 -x localhost:1080 %h %p'])
+                self.assertIn('ERROR: Invalid SSH option: "=nc -X 5 -x localhost:1080 %h %p".', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_ssh_option_with_empty_value_using_equal_sign(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-o', 'ProxyCommand='])
+                self.assertIn('ERROR: Invalid SSH option: "ProxyCommand=', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_ssh_option_with_empty_key_using_whitespace(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-o', ' nc -X 5 -x localhost:1080 %h %p'])
+                self.assertIn('ERROR: Invalid SSH option: " nc -X 5 -x localhost:1080 %h %p".', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_ssh_option_with_empty_value_using_whitespace(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-o', 'ProxyCommand '])
+                self.assertIn('ERROR: Invalid SSH option: "ProxyCommand ', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
     def test_configure_ssh_option_unsupported_option_using_equal_sign(self):
         with FakeStdOut() as out:
             with FakeStdErr() as err:
