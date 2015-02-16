@@ -50,6 +50,7 @@ class CommandLineTest(TestCase):
             self.assertEqual(config['recursive'], False)
             self.assertEqual(config['verbose'],   False)
             self.assertIsNone(config['private_key'])
+            self.assertEqual(len(config['ssh_options']), 0)
 
     def test_configure_force_short_option(self):
         config = configure(['-f'])
@@ -129,6 +130,46 @@ class CommandLineTest(TestCase):
                 error_message = err.getvalue()
                 self.assertIn('ERROR: Invalid path: "', error_message)
                 self.assertIn('non_existing_private_key". Provided path does NOT exist. Please provide a valid path to your private key.', error_message)
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_ssh_option_proxy_command_using_equal_sign(self):
+        config = configure(['-o', 'ProxyCommand=nc -X 5 -x localhost:1080 %h %p'])
+        self.assertEqual(len(config['ssh_options']), 1)
+        self.assertEqual(config['ssh_options']['ProxyCommand'], 'nc -X 5 -x localhost:1080 %h %p')
+
+    def test_configure_ssh_option_proxy_command_using_whitespace(self):
+        config = configure(['-o', 'ProxyCommand nc -X 5 -x localhost:1080 %h %p'])
+        self.assertEqual(len(config['ssh_options']), 1)
+        self.assertEqual(config['ssh_options']['ProxyCommand'], 'nc -X 5 -x localhost:1080 %h %p')
+
+    def test_configure_missing_ssh_option(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-o'])
+                self.assertIn('ERROR: option -o requires argument', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_empty_ssh_option(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-o', ''])
+                self.assertIn('ERROR: Invalid SSH option: "".', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_ssh_option_unsupported_option_using_equal_sign(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-o', 'User=john'])
+                error_message = err.getvalue()
+                self.assertIn('ERROR: Unsupported SSH option: "User". Only the following SSH options are currently supported: ProxyCommand.', error_message)
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_ssh_option_unsupported_option_using_whitespace(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-o', 'User john'])
+                error_message = err.getvalue()
+                self.assertIn('ERROR: Unsupported SSH option: "User". Only the following SSH options are currently supported: ProxyCommand.', error_message)
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
 def path_for(filename):

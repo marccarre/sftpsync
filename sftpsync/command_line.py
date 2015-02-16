@@ -55,9 +55,10 @@ def configure(argv):
             'recursive': False,
             'verbose':   False,
             'private_key': None,
+            'ssh_options': {},
         }
 
-        opts, args = getopt(argv, 'fhi:pqrv', ['force', 'help', 'identity=', 'preserve', 'quiet', 'recursive', 'verbose'])
+        opts, args = getopt(argv, 'fhi:o:pqrv', ['force', 'help', 'identity=', 'preserve', 'quiet', 'recursive', 'verbose'])
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
@@ -74,6 +75,9 @@ def configure(argv):
                 config['verbose']   = True
             if opt in ('-i', '--identity'):
                 config['private_key'] = _validate_private_key_path(value)
+            if opt == '-o':
+                k, v = _validate_ssh_option(value)
+                config['ssh_options'][k] = v
 
         if config['verbose'] and config['quiet']:
             raise ValueError('Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.')
@@ -92,3 +96,14 @@ def _validate_private_key_path(path):
     if not os.path.exists(path):
         raise ValueError('Invalid path: "%s". Provided path does NOT exist. Please provide a valid path to your private key.' % path)
     return path
+
+def _validate_ssh_option(option, white_list=['ProxyCommand']):
+    key_value = option.split('=', 1) if '=' in option else option.split(' ', 1)
+    if not key_value or not len(key_value) == 2:
+        raise ValueError('Invalid SSH option: "%s".' % option)
+    key, value = key_value
+    if not key or not value:
+        raise ValueError('Invalid SSH option: "%s".' % option)
+    if key not in white_list:
+        raise ValueError('Unsupported SSH option: "%s". Only the following SSH options are currently supported: %s.' % (key, ', '.join(white_list)))
+    return key, value
