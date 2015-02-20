@@ -1,7 +1,6 @@
 from unittest2 import TestCase, main
-from tests.test_utilities import FakeStdOut, FakeStdErr
+from tests.test_utilities import FakeStdOut, FakeStdErr, path_for
 from six import assertRaisesRegex
-import os
 from sftpsync.command_line import usage, configure
 
 class CommandLineTest(TestCase):
@@ -102,11 +101,17 @@ class CommandLineTest(TestCase):
     def test_configure_identity_short_option(self):
         config = configure(['-i', path_for('test_sftp_server_rsa')])
         self.assertIsNotNone(config['private_key'])
+        # Verify path components:
+        self.assertIn('sftpsync',             config['private_key'])
+        self.assertIn('tests',                config['private_key'])
         self.assertIn('test_sftp_server_rsa', config['private_key'])
 
     def test_configure_identity_long_option(self):
         config = configure(['--identity', path_for('test_sftp_server_rsa')])
         self.assertIsNotNone(config['private_key'])
+        # Verify path components:
+        self.assertIn('sftpsync',             config['private_key'])
+        self.assertIn('tests',                config['private_key'])
         self.assertIn('test_sftp_server_rsa', config['private_key'])
 
     def test_configure_missing_identity(self):
@@ -199,12 +204,6 @@ class CommandLineTest(TestCase):
                 error_message = err.getvalue()
                 self.assertIn('ERROR: Unsupported SSH option: "User". Only the following SSH options are currently supported: ProxyCommand.', error_message)
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
-
-def path_for(filename):
-    return os.path.join(current_dir(), filename)
-
-def current_dir():
-    return os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
 if __name__ == '__main__':
     main()

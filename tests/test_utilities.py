@@ -1,5 +1,14 @@
+import os
 import sys
 from six import StringIO
+
+
+def path_for(filename):
+    return os.path.join(current_dir(), filename)
+
+def current_dir():
+    return os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+
 
 class FakeStdOut(object):
     def __enter__(self):
