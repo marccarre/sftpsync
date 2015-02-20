@@ -27,6 +27,9 @@ def usage(error_message=None):
         '',
         'Options:',
         '-f/--force      Force the synchronization regardless of files\' presence or timestamps.',
+        '-F config_file  Specifies an alternative per-user configuration file.',
+        '                If a configuration file is given on the command line, the system-wide configuration file (/etc/ssh/ssh_config) will be ignored.',
+        '                The default for the per-user configuration file is ~/.ssh/config.',
         '-h/--help       Prints this!',
         '-i/--identity identity_file',
         '                Selects the file from which the identity (private key) for public key authentication is read.',
@@ -55,10 +58,11 @@ def configure(argv):
             'recursive': False,
             'verbose':   False,
             'private_key': None,
+            'ssh_config' : '~/.ssh/config',
             'ssh_options': {},
         }
 
-        opts, args = getopt(argv, 'fhi:o:pqrv', ['force', 'help', 'identity=', 'preserve', 'quiet', 'recursive', 'verbose'])
+        opts, args = getopt(argv, 'fF:hi:o:pqrv', ['force', 'help', 'identity=', 'preserve', 'quiet', 'recursive', 'verbose'])
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
@@ -75,6 +79,8 @@ def configure(argv):
                 config['verbose']   = True
             if opt in ('-i', '--identity'):
                 config['private_key'] = _validate_private_key_path(value)
+            if opt == '-F':
+                config['ssh_config']  = _validate_ssh_config_path(value)
             if opt == '-o':
                 k, v = _validate_ssh_option(value)
                 config['ssh_options'][k] = v
@@ -95,6 +101,13 @@ def _validate_private_key_path(path):
         raise ValueError('Invalid path: "%s". Please provide a valid path to your private key.' % path)
     if not os.path.exists(path):
         raise ValueError('Invalid path: "%s". Provided path does NOT exist. Please provide a valid path to your private key.' % path)
+    return path
+
+def _validate_ssh_config_path(path):
+    if not path:
+        raise ValueError('Invalid path: "%s". Please provide a valid path to your SSH configuration.' % path)
+    if not os.path.exists(path):
+        raise ValueError('Invalid path: "%s". Provided path does NOT exist. Please provide a valid path to your SSH configuration.' % path)
     return path
 
 def _validate_ssh_option(option, white_list=['ProxyCommand']):

@@ -1,0 +1,12 @@
+# client -> proxy-server -> sftp-server
+
+Host proxy-server
+  User foo
+  HostName proxy-server.example.com
+  IdentityFile ./test_proxy_server_rsa
+
+Host sftp-server
+  User bar
+  HostName sftp-server.example.com
+  IdentityFile ./test_sftp_server_rsa
+  ProxyCommand ssh proxy-server nc %h %p

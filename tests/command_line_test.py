@@ -98,6 +98,7 @@ class CommandLineTest(TestCase):
                 self.assertIn('ERROR: Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.', err.getvalue())
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
+
     def test_configure_identity_short_option(self):
         config = configure(['-i', path_for('test_sftp_server_rsa')])
         self.assertIsNotNone(config['private_key'])
@@ -136,6 +137,39 @@ class CommandLineTest(TestCase):
                 self.assertIn('ERROR: Invalid path: "', error_message)
                 self.assertIn('non_existing_private_key". Provided path does NOT exist. Please provide a valid path to your private key.', error_message)
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+
+    def test_configure_ssh_configuration_short_option(self):
+        config = configure(['-F', path_for('test_ssh_config')])
+        self.assertIsNotNone(config['ssh_config'])
+        # Verify path components:
+        self.assertIn('sftpsync',        config['ssh_config'])
+        self.assertIn('tests',           config['ssh_config'])
+        self.assertIn('test_ssh_config', config['ssh_config'])
+
+    def test_configure_missing_ssh_configuration(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-F'])
+                self.assertIn('ERROR: option -F requires argument', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_empty_ssh_configuration(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-F', ''])
+                self.assertIn('ERROR: Invalid path: "". Please provide a valid path to your SSH configuration.', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_non_existing_ssh_configuration(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['-F', path_for('non_existing_ssh_config')])
+                error_message = err.getvalue()
+                self.assertIn('ERROR: Invalid path: "', error_message)
+                self.assertIn('non_existing_ssh_config". Provided path does NOT exist. Please provide a valid path to your SSH configuration.', error_message)
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
 
     def test_configure_ssh_option_proxy_command_using_equal_sign(self):
         config = configure(['-o', 'ProxyCommand=nc -X 5 -x localhost:1080 %h %p'])
