@@ -10,5 +10,6 @@ def ssh_config(path='~/.ssh/config'):
     '''
     ssh_config = SSHConfig()
     if os.path.isfile(path):
-        ssh_config.parse(open(path))
+        with open(path) as f:
+            ssh_config.parse(f)
     return ssh_config
