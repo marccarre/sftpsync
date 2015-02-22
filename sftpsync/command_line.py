@@ -2,8 +2,9 @@ import sys
 from sys import argv, exit
 import os
 from os import linesep
-import re
 from getopt import getopt, GetoptError
+import re
+import socks
 
 
 ERROR_ILLEGAL_ARGUMENTS = 2
@@ -58,17 +59,19 @@ def configure(argv):
             'quiet':     False,
             'recursive': False,
             'verbose':   False,
-            'private_key': None,
-            'ssh_config' : '~/.ssh/config',
-            'ssh_options': {},
-            'proxy':       None,
+            'private_key':   None,
+            'proxy':         None,
+            'proxy_version': socks.SOCKS5,
+            'ssh_config' :   '~/.ssh/config',
+            'ssh_options':   {},
         }
 
-        opts, args = getopt(argv, 'fF:hi:o:pqrv', ['force', 'help', 'identity=', 'preserve', 'proxy=', 'quiet', 'recursive', 'verbose'])
+        opts, args = getopt(argv, 'fF:hi:o:pqrv', ['force', 'help', 'identity=', 'preserve', 'proxy=', 'proxy-version=', 'quiet', 'recursive', 'verbose'])
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
                 exit()
+
             if opt in ('-f', '--force'):
                 config['force']     = True
             if opt in ('-p', '--preserve'):
@@ -79,15 +82,20 @@ def configure(argv):
                 config['recursive'] = True
             if opt in ('-v', '--verbose'):
                 config['verbose']   = True
+            
             if opt in ('-i', '--identity'):
-                config['private_key'] = _validate_private_key_path(value)
+                config['private_key']    = _validate_private_key_path(value)
+            
+            if opt == '--proxy':
+                config['proxy']          = _validate_and_parse_socks_proxy(value)
+            if opt == '--proxy-version':
+                config['proxy_version']  = _validate_and_parse_socks_proxy_version(value)
+
             if opt == '-F':
-                config['ssh_config']  = _validate_ssh_config_path(value)
+                config['ssh_config']     = _validate_ssh_config_path(value)
             if opt == '-o':
                 k, v = _validate_ssh_option(value)
                 config['ssh_options'][k] = v
-            if opt == '--proxy':
-                config['proxy'] = _parse_proxy(value)
 
         if config['verbose'] and config['quiet']:
             raise ValueError('Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.')
@@ -142,10 +150,10 @@ def _group(name, patterns=_PATTERNS):
 
 _PROXY_PATTERN = '^(%s(:%s)?@)?%s(:%s)?$'      % (_group(_USER), _group(_PASS), _group(_HOST), _group(_PORT))
 
-def _parse_proxy(proxy):
-    return _parse_connection_string(proxy, _PROXY_PATTERN, 'Invalid proxy: "%s".' % proxy)
+def _validate_and_parse_socks_proxy(proxy):
+    return _validate_and_parse_connection_string(proxy, _PROXY_PATTERN, 'Invalid proxy: "%s".' % proxy)
 
-def _parse_connection_string(connection_string, pattern, error_message):
+def _validate_and_parse_connection_string(connection_string, pattern, error_message):
     ''' 
     Parses the provided connection string against the provided pattern into a dictionary, if there is a match, 
     or raises exception if no match.
@@ -154,3 +162,8 @@ def _parse_connection_string(connection_string, pattern, error_message):
     if not match:
         raise ValueError(error_message)
     return dict((key, value) for (key, value) in match.groupdict().items() if value)
+
+def _validate_and_parse_socks_proxy_version(socks_version, white_list=['SOCKS4', 'SOCKS5']):
+    if socks_version not in white_list:
+        raise ValueError('Invalid SOCKS proxy version: "%s". Please choose one of the following values: { %s }.' % (socks_version, ', '.join(white_list)))
+    return eval('socks.%s' % socks_version)

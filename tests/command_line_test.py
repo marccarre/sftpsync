@@ -2,6 +2,7 @@ from unittest2 import TestCase, main
 from tests.test_utilities import FakeStdOut, FakeStdErr, path_for
 from six import assertRaisesRegex
 from sftpsync.command_line import usage, configure
+import socks
 
 class CommandLineTest(TestCase):
 
@@ -50,6 +51,7 @@ class CommandLineTest(TestCase):
             self.assertEqual(config['verbose'],   False)
             self.assertIsNone(config['private_key'])
             self.assertIsNone(config['proxy'])
+            self.assertEqual(config['proxy_version'], socks.SOCKS5)
             self.assertEqual(len(config['ssh_options']), 0)
 
     def test_configure_force_short_option(self):
@@ -285,6 +287,36 @@ class CommandLineTest(TestCase):
             with FakeStdErr() as err:
                 self.assertRaisesRegex(SystemExit, '2', configure, ['--proxy', ''])
                 self.assertIn('ERROR: Invalid proxy: "".', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+
+    def test_configure_proxy_version_socks_4(self):
+        config = configure(['--proxy-version', 'SOCKS4'])
+        self.assertEqual(config['proxy_version'], socks.SOCKS4)
+
+    def test_configure_proxy_version_socks_5(self):
+        config = configure(['--proxy-version', 'SOCKS5'])
+        self.assertEqual(config['proxy_version'], socks.SOCKS5)
+
+    def test_configure_missing_proxy_version(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['--proxy-version'])
+                self.assertIn('ERROR: option --proxy-version requires argument', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_empty_proxy_version(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['--proxy-version', ''])
+                self.assertIn('ERROR: Invalid SOCKS proxy version: "". Please choose one of the following values: { SOCKS4, SOCKS5 }.', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_invalid_proxy_version(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['--proxy-version', 'SOCKS1337-which-does-not-exist'])
+                self.assertIn('ERROR: Invalid SOCKS proxy version: "SOCKS1337-which-does-not-exist". Please choose one of the following values: { SOCKS4, SOCKS5 }.', err.getvalue())
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
 if __name__ == '__main__':
