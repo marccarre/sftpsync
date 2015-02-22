@@ -388,6 +388,13 @@ class CommandLineTest(TestCase):
         config = configure(['sftp://yoda:p4$$w0rd@sftp-server.example.com:22/data', path_for('.')])
         self.assertEqual(config['destination'], path_for('.'))
 
+    def test_configure_arguments_sftp_source_local_destination_non_existing_destination_folder(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['sftp://yoda:p4$$w0rd@sftp-server.example.com:22/data', '/non/existing/folder'])
+                self.assertIn('ERROR: Invalid path. "/non/existing/folder" does NOT exist.', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
     def test_configure_arguments_sftp_source_local_destination_non_writable_folder(self):
         with NonWritableFolder() as path:
             with FakeStdOut() as out:
@@ -405,6 +412,13 @@ class CommandLineTest(TestCase):
         self.assertEqual(config['destination']['pass'], 'p4$$w0rd')
         self.assertEqual(config['destination']['port'], '22')
         self.assertEqual(config['destination']['path'], '/data')
+
+    def test_configure_arguments_local_source_sftp_destination_non_existing_source_folder(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['/non/existing/folder', 'sftp://yoda:p4$$w0rd@sftp-server.example.com:22/data'])
+                self.assertIn('ERROR: Invalid path. "/non/existing/folder" does NOT exist.', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
     def test_configure_arguments_local_source_sftp_destination_non_readable_folder(self):
         with NonReadableFolder() as path:
