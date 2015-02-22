@@ -1,6 +1,5 @@
 from unittest2 import TestCase, main
-from tests.test_utilities import path_for
-from tempfile import mktemp
+from tests.test_utilities import path_for, TempFile
 from sftpsync.sftpsync import ssh_config
 
 class SftpSyncTest(TestCase):
@@ -38,9 +37,10 @@ class SftpSyncTest(TestCase):
         self.assertEquals(config['hostname'], 'sftp-server')
 
     def test_ssh_config__empty_ssh_config_file(self):
-        config = ssh_config(mktemp()).lookup('sftp-server')
-        self.assertEquals(len(config), 1)
-        self.assertEquals(config['hostname'], 'sftp-server')
+        with TempFile() as path:
+            config = ssh_config(path).lookup('sftp-server')
+            self.assertEquals(len(config), 1)
+            self.assertEquals(config['hostname'], 'sftp-server')
 
 if __name__ == '__main__':
     main()

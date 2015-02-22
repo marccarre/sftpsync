@@ -5,6 +5,7 @@ from os import linesep
 from getopt import getopt, GetoptError
 import re
 import socks
+from getpass import getuser
 
 
 ERROR_ILLEGAL_ARGUMENTS = 2
@@ -17,9 +18,9 @@ def usage(error_message=None):
         'Usage:',
         '    sftpsync.py [OPTION]... SOURCE DESTINATION',
         'Pull:',
-        '    sftpsync.py [OPTION]... [user[:password]@]host[:port][/path] /path/to/local/copy',
+        '    sftpsync.py [OPTION]... [s]ftp://[user[:password]@]host[:port][/path] /path/to/local/copy',
         'Push:',
-        '    sftpsync.py [OPTION]... /path/to/local/copy [user[:password]@]host[:port][/path]',
+        '    sftpsync.py [OPTION]... /path/to/local/copy [s]ftp://[user[:password]@]host[:port][/path]',
         '',
         'Defaults:',
         '    user:     anonymous',
@@ -100,6 +101,12 @@ def configure(argv):
         if config['verbose'] and config['quiet']:
             raise ValueError('Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.')
 
+        if len(args) != 2:
+            raise ValueError('Please provide a source and a destination. Expected 2 arguments but got %s: %s.' % (len(args), args))
+        (source, destination) = args
+        config['source']      = _validate_source(source)
+        config['destination'] = _validate_destination(destination)
+
         return config
     except GetoptError as e:
         usage(str(e))
@@ -133,25 +140,35 @@ def _validate_ssh_option(option, white_list=['ProxyCommand']):
         raise ValueError('Unsupported SSH option: "%s". Only the following SSH options are currently supported: %s.' % (key, ', '.join(white_list)))
     return key, value
 
-_USER = 'user'
-_PASS = 'pass'
-_HOST = 'host'
-_PORT = 'port'
-
+_USER     = 'user'
+_PASS     = 'pass'
+_HOST     = 'host'
+_PORT     = 'port'
+_PATH     = 'path'
+_DRIVE    = 'drive'
+_FILEPATH = 'filepath'
 _PATTERNS = {
-    _USER: '.+?',
-    _PASS: '.+?',
-    _HOST: '[a-zA-Z0-9_\-\.]+',
-    _PORT: '[0-9]{1,5}',
+    _USER:     r'.+?',
+    _PASS:     r'.+?',
+    _HOST:     r'[\w\-\.]{3,}?',
+    _PORT:     r'|\d{1,4}|6553[0-5]|655[0-2]\d|65[0-4]\d{2}|6[0-4]\d{3}|[0-5]\d{4}',
+    _PATH:     r'/.*',
+    _DRIVE:    r'[a-zA-Z]{1}:',
+    _FILEPATH: r'.*?',
 }
 
 def _group(name, patterns=_PATTERNS):
     return '(?P<%s>%s)' % (name, patterns[name])
 
-_PROXY_PATTERN = '^(%s(:%s)?@)?%s(:%s)?$'      % (_group(_USER), _group(_PASS), _group(_HOST), _group(_PORT))
+_PROXY_PATTERN = '^(%s(:%s)?@)?%s(:%s)?$'            % (_group(_USER), _group(_PASS), _group(_HOST), _group(_PORT))
+_SFTP_PATTERN  = '^s?ftp://(%s(:%s)?@)?%s(:%s)?%s?$' % (_group(_USER), _group(_PASS), _group(_HOST), _group(_PORT), _group(_PATH))
+_PATH_PATTERN  = '^%s?%s$'                           % (_group(_DRIVE), _group(_FILEPATH))
 
 def _validate_and_parse_socks_proxy(proxy):
     return _validate_and_parse_connection_string(proxy, _PROXY_PATTERN, 'Invalid proxy: "%s".' % proxy)
+
+def _validate_and_parse_sftp(sftp):
+    return _validate_and_parse_connection_string(sftp, _SFTP_PATTERN, 'Invalid SFTP connection details: "%s".' % sftp)
 
 def _validate_and_parse_connection_string(connection_string, pattern, error_message):
     ''' 
@@ -167,3 +184,37 @@ def _validate_and_parse_socks_proxy_version(socks_version, white_list=['SOCKS4',
     if socks_version not in white_list:
         raise ValueError('Invalid SOCKS proxy version: "%s". Please choose one of the following values: { %s }.' % (socks_version, ', '.join(white_list)))
     return eval('socks.%s' % socks_version)
+
+def _validate_source(source):
+    if _is_sftp(source):
+        return _validate_and_parse_sftp(source)
+    if _is_path(source):
+        return _validate_is_readable_path(source)
+    raise ValueError('Invalid source. Please provide either SFTP connection details or a path to a local, existing and readable folder: %s.' % source)
+
+def _validate_destination(destination):
+    if _is_sftp(destination):
+        return _validate_and_parse_sftp(destination)
+    if _is_path(destination):
+        return _validate_is_writable_path(destination)
+    raise ValueError('Invalid destination. Please provide either SFTP connection details or a path to a local, existing and writable folder: %s.' % destination)
+
+def _is_sftp(sftp):
+    return re.search(_SFTP_PATTERN, sftp)
+
+def _is_path(path):
+    return re.search(_PATH_PATTERN, path)
+
+def _validate_is_readable_path(path):
+    if not os.path.exists(path):
+        raise ValueError('Invalid path. "%s" does NOT exist.' % path)
+    if not os.access(os.path.abspath(path), os.R_OK):
+        raise ValueError('Invalid path. "%s" exists but user "%s" does NOT have read access.' % (path, getuser()))
+    return path
+
+def _validate_is_writable_path(path):
+    if not os.path.exists(path):
+        raise ValueError('Invalid path. "%s" does NOT exist.' % path)
+    if not os.access(os.path.abspath(path), os.W_OK):
+        raise ValueError('Invalid path. "%s" exists but user "%s" does NOT have write access.' % (path, getuser()))
+    return path
