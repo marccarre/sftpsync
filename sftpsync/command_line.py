@@ -2,6 +2,7 @@ import sys
 from sys import argv, exit
 import os
 from os import linesep
+import re
 from getopt import getopt, GetoptError
 
 
@@ -15,9 +16,9 @@ def usage(error_message=None):
         'Usage:',
         '    sftpsync.py [OPTION]... SOURCE DESTINATION',
         'Pull:',
-        '    sftpsync.py [OPTION]... [user[:password]@]host[:[port]/path] /path/to/local/copy',
+        '    sftpsync.py [OPTION]... [user[:password]@]host[:port][/path] /path/to/local/copy',
         'Push:',
-        '    sftpsync.py [OPTION]... /path/to/local/copy [user[:password]@]host[:[port]/path]',
+        '    sftpsync.py [OPTION]... /path/to/local/copy [user[:password]@]host[:port][/path]',
         '',
         'Defaults:',
         '    user:     anonymous',
@@ -60,9 +61,10 @@ def configure(argv):
             'private_key': None,
             'ssh_config' : '~/.ssh/config',
             'ssh_options': {},
+            'proxy':       None,
         }
 
-        opts, args = getopt(argv, 'fF:hi:o:pqrv', ['force', 'help', 'identity=', 'preserve', 'quiet', 'recursive', 'verbose'])
+        opts, args = getopt(argv, 'fF:hi:o:pqrv', ['force', 'help', 'identity=', 'preserve', 'proxy=', 'quiet', 'recursive', 'verbose'])
         for opt, value in opts:
             if opt in ('-h', '--help'):
                 usage()
@@ -84,6 +86,8 @@ def configure(argv):
             if opt == '-o':
                 k, v = _validate_ssh_option(value)
                 config['ssh_options'][k] = v
+            if opt == '--proxy':
+                config['proxy'] = _parse_proxy(value)
 
         if config['verbose'] and config['quiet']:
             raise ValueError('Please provide either -q/--quiet OR -v/--verbose, but NOT both at the same time.')
@@ -120,3 +124,33 @@ def _validate_ssh_option(option, white_list=['ProxyCommand']):
     if key not in white_list:
         raise ValueError('Unsupported SSH option: "%s". Only the following SSH options are currently supported: %s.' % (key, ', '.join(white_list)))
     return key, value
+
+_USER = 'user'
+_PASS = 'pass'
+_HOST = 'host'
+_PORT = 'port'
+
+_PATTERNS = {
+    _USER: '.+?',
+    _PASS: '.+?',
+    _HOST: '[a-zA-Z0-9_\-\.]+',
+    _PORT: '[0-9]{1,5}',
+}
+
+def _group(name, patterns=_PATTERNS):
+    return '(?P<%s>%s)' % (name, patterns[name])
+
+_PROXY_PATTERN = '^(%s(:%s)?@)?%s(:%s)?$'      % (_group(_USER), _group(_PASS), _group(_HOST), _group(_PORT))
+
+def _parse_proxy(proxy):
+    return _parse_connection_string(proxy, _PROXY_PATTERN, 'Invalid proxy: "%s".' % proxy)
+
+def _parse_connection_string(connection_string, pattern, error_message):
+    ''' 
+    Parses the provided connection string against the provided pattern into a dictionary, if there is a match, 
+    or raises exception if no match.
+    ''' 
+    match = re.search(pattern, connection_string)
+    if not match:
+        raise ValueError(error_message)
+    return dict((key, value) for (key, value) in match.groupdict().items() if value)

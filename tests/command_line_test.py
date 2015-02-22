@@ -49,6 +49,7 @@ class CommandLineTest(TestCase):
             self.assertEqual(config['recursive'], False)
             self.assertEqual(config['verbose'],   False)
             self.assertIsNone(config['private_key'])
+            self.assertIsNone(config['proxy'])
             self.assertEqual(len(config['ssh_options']), 0)
 
     def test_configure_force_short_option(self):
@@ -237,6 +238,53 @@ class CommandLineTest(TestCase):
                 self.assertRaisesRegex(SystemExit, '2', configure, ['-o', 'User john'])
                 error_message = err.getvalue()
                 self.assertIn('ERROR: Unsupported SSH option: "User". Only the following SSH options are currently supported: ProxyCommand.', error_message)
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_proxy_host(self):
+        config = configure(['--proxy', 'sftp-server.example.com'])
+        self.assertEqual(len(config['proxy']), 1)
+        self.assertEqual(config['proxy']['host'], 'sftp-server.example.com')
+
+    def test_configure_proxy_user_host(self):
+        config = configure(['--proxy', 'anonymous@sftp-server.example.com'])
+        self.assertEqual(len(config['proxy']), 2)
+        self.assertEqual(config['proxy']['host'], 'sftp-server.example.com')
+        self.assertEqual(config['proxy']['user'], 'anonymous')
+
+    def test_configure_proxy_user_host_port(self):
+        config = configure(['--proxy', 'anonymous@sftp-server.example.com:1080'])
+        self.assertEqual(len(config['proxy']), 3)
+        self.assertEqual(config['proxy']['host'], 'sftp-server.example.com')
+        self.assertEqual(config['proxy']['user'], 'anonymous')
+        self.assertEqual(config['proxy']['port'], '1080')
+
+    def test_configure_proxy_user_password_host(self):
+        config = configure(['--proxy', 'anonymous:password123@sftp-server.example.com'])
+        self.assertEqual(len(config['proxy']), 3)
+        self.assertEqual(config['proxy']['host'], 'sftp-server.example.com')
+        self.assertEqual(config['proxy']['user'], 'anonymous')
+        self.assertEqual(config['proxy']['pass'], 'password123')
+
+    def test_configure_proxy_user_password_host_port(self):
+        config = configure(['--proxy', 'anonymous:password123@sftp-server.example.com:1080'])
+        self.assertEqual(len(config['proxy']), 4)
+        self.assertEqual(config['proxy']['host'], 'sftp-server.example.com')
+        self.assertEqual(config['proxy']['user'], 'anonymous')
+        self.assertEqual(config['proxy']['pass'], 'password123')
+        self.assertEqual(config['proxy']['port'], '1080')
+
+    def test_configure_missing_proxy(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['--proxy'])
+                self.assertIn('ERROR: option --proxy requires argument', err.getvalue())
+                self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
+
+    def test_configure_empty_proxy(self):
+        with FakeStdOut() as out:
+            with FakeStdErr() as err:
+                self.assertRaisesRegex(SystemExit, '2', configure, ['--proxy', ''])
+                self.assertIn('ERROR: Invalid proxy: "".', err.getvalue())
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
 if __name__ == '__main__':
