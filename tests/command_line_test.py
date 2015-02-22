@@ -243,34 +243,34 @@ class CommandLineTest(TestCase):
                 self.assertIn('sftpsync.py [OPTION]... SOURCE DESTINATION', out.getvalue())
 
     def test_configure_proxy_host(self):
-        config = configure(['--proxy', 'sftp-server.example.com'])
+        config = configure(['--proxy', 'proxy-server.example.com'])
         self.assertEqual(len(config['proxy']), 1)
-        self.assertEqual(config['proxy']['host'], 'sftp-server.example.com')
+        self.assertEqual(config['proxy']['host'], 'proxy-server.example.com')
 
     def test_configure_proxy_user_host(self):
-        config = configure(['--proxy', 'anonymous@sftp-server.example.com'])
+        config = configure(['--proxy', 'anonymous@proxy-server.example.com'])
         self.assertEqual(len(config['proxy']), 2)
-        self.assertEqual(config['proxy']['host'], 'sftp-server.example.com')
+        self.assertEqual(config['proxy']['host'], 'proxy-server.example.com')
         self.assertEqual(config['proxy']['user'], 'anonymous')
 
     def test_configure_proxy_user_host_port(self):
-        config = configure(['--proxy', 'anonymous@sftp-server.example.com:1080'])
+        config = configure(['--proxy', 'anonymous@proxy-server.example.com:1080'])
         self.assertEqual(len(config['proxy']), 3)
-        self.assertEqual(config['proxy']['host'], 'sftp-server.example.com')
+        self.assertEqual(config['proxy']['host'], 'proxy-server.example.com')
         self.assertEqual(config['proxy']['user'], 'anonymous')
         self.assertEqual(config['proxy']['port'], '1080')
 
     def test_configure_proxy_user_password_host(self):
-        config = configure(['--proxy', 'anonymous:password123@sftp-server.example.com'])
+        config = configure(['--proxy', 'anonymous:password123@proxy-server.example.com'])
         self.assertEqual(len(config['proxy']), 3)
-        self.assertEqual(config['proxy']['host'], 'sftp-server.example.com')
+        self.assertEqual(config['proxy']['host'], 'proxy-server.example.com')
         self.assertEqual(config['proxy']['user'], 'anonymous')
         self.assertEqual(config['proxy']['pass'], 'password123')
 
     def test_configure_proxy_user_password_host_port(self):
-        config = configure(['--proxy', 'anonymous:password123@sftp-server.example.com:1080'])
+        config = configure(['--proxy', 'anonymous:password123@proxy-server.example.com:1080'])
         self.assertEqual(len(config['proxy']), 4)
-        self.assertEqual(config['proxy']['host'], 'sftp-server.example.com')
+        self.assertEqual(config['proxy']['host'], 'proxy-server.example.com')
         self.assertEqual(config['proxy']['user'], 'anonymous')
         self.assertEqual(config['proxy']['pass'], 'password123')
         self.assertEqual(config['proxy']['port'], '1080')
