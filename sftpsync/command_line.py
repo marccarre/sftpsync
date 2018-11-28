@@ -83,10 +83,10 @@ def configure(argv):
                 config['recursive'] = True
             if opt in ('-v', '--verbose'):
                 config['verbose']   = True
-            
+
             if opt in ('-i', '--identity'):
                 config['private_key']    = _validate_private_key_path(value)
-            
+
             if opt == '--proxy':
                 config['proxy']          = _validate_and_parse_socks_proxy(value)
             if opt == '--proxy-version':
@@ -171,10 +171,10 @@ def _validate_and_parse_sftp(sftp):
     return _validate_and_parse_connection_string(sftp, _SFTP_PATTERN, 'Invalid SFTP connection details: "%s".' % sftp)
 
 def _validate_and_parse_connection_string(connection_string, pattern, error_message):
-    ''' 
-    Parses the provided connection string against the provided pattern into a dictionary, if there is a match, 
+    '''
+    Parses the provided connection string against the provided pattern into a dictionary, if there is a match,
     or raises exception if no match.
-    ''' 
+    '''
     match = re.search(pattern, connection_string)
     if not match:
         raise ValueError(error_message)
