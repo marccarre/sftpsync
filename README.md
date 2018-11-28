@@ -2,3 +2,15 @@
 
 # sftpsync
 Folder synchronization over (S)FTP
+
+## Development
+
+### Dependencies
+
+- `gmp`:
+
+```console
+brew install gmp
+export "CFLAGS=-I/usr/local/include -L/usr/local/lib"
+pipenv install
+```
